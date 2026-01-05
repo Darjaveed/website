@@ -67,3 +67,6 @@ export const getCourseBySlug = async (req, res) => {
   }
 };
 
+// Alias to meet expected handler name
+export const getAllCourses = getCourses;
+

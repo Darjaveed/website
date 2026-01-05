@@ -4,7 +4,7 @@
  */
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { login as loginApi, getCurrentUser, logout as logoutApi } from '../services/authService';
+import { login as loginApi, getCurrentUser, logout as logoutApi, register as registerApi } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -36,9 +36,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Allow consumers to refresh the current user state from the server
+  const refreshUser = async () => {
+    try {
+      const response = await getCurrentUser();
+      setUser(response.user);
+      return response.user;
+    } catch (error) {
+      setUser(null);
+      throw error;
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await loginApi(email, password);
+      setUser(response.user);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      const response = await registerApi(name, email, password);
       setUser(response.user);
       return { success: true };
     } catch (error) {
@@ -60,10 +82,12 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
+    register,
     logout,
     loading,
     isAuthenticated: !!user,
     userRole: user?.role || null,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

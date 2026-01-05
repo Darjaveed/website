@@ -36,6 +36,36 @@ export const login = async (email, password) => {
 };
 
 /**
+ * Register user
+ * @param {string} name
+ * @param {string} email
+ * @param {string} password
+ */
+export const register = async (name, email, password) => {
+  try {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Registration failed');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Register error:', error);
+    throw error;
+  }
+};
+
+/**
  * Get current authenticated user
  * @returns {Promise<Object>} Current user data
  */

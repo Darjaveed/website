@@ -4,13 +4,14 @@
  */
 
 import express from 'express';
-import { login, getCurrentUser, logout } from '../controllers/authController.js';
+import { login, getCurrentUser, logout, register } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // Public routes
 router.post('/login', login);
+router.post('/register', register);
 router.post('/logout', logout);
 
 // Protected routes (require authentication)

@@ -14,6 +14,10 @@ dotenv.config();
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import lmsRoutes from './routes/lmsRoutes.js';
+import enrollRoutes from './routes/enrollRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 const app = express();
 
@@ -29,6 +33,10 @@ app.use(cookieParser()); // Parse cookies
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/lms', lmsRoutes);
+app.use('/api/enroll', enrollRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

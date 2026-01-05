@@ -4,17 +4,18 @@
  * Responsive design with mobile menu
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchCourses } from '../services/courseService';
-import { getCoursesByCategory } from '../data/courses';
 
-const Navbar = () => {
+const Navbar = ({ onOpenSupport }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
   const [programCourses, setProgramCourses] = useState([]);
   const [shortTermCourses, setShortTermCourses] = useState([]);
 
@@ -26,16 +27,11 @@ const Navbar = () => {
   const loadCourses = async () => {
     try {
       const allCourses = await fetchCourses();
-      if (allCourses && allCourses.length > 0) {
-        setProgramCourses(allCourses.filter(c => c.category === 'program'));
-        setShortTermCourses(allCourses.filter(c => c.category === 'short-term'));
-      } else {
-        setProgramCourses(getCoursesByCategory('program'));
-        setShortTermCourses(getCoursesByCategory('short-term'));
-      }
-    } catch (error) {
-      setProgramCourses(getCoursesByCategory('program'));
-      setShortTermCourses(getCoursesByCategory('short-term'));
+      setProgramCourses((allCourses || []).filter((c) => c.category === 'program'));
+      setShortTermCourses((allCourses || []).filter((c) => c.category === 'short-term'));
+    } catch (err) {
+      setProgramCourses([]);
+      setShortTermCourses([]);
     }
   };
 
@@ -51,6 +47,20 @@ const Navbar = () => {
     await logout();
     navigate('/');
   };
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    if (profileOpen) {
+      document.addEventListener('mousedown', onClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [profileOpen]);
 
   const moreMenuItems = [
     { label: 'All Programs', path: '/programs' },
@@ -78,6 +88,13 @@ const Navbar = () => {
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
             >
               Home
+            </Link>
+
+            <Link 
+              to="/admin"
+              className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+            >
+              Admin Panel
             </Link>
 
             {/* Programs Dropdown */}
@@ -181,23 +198,62 @@ const Navbar = () => {
               Cart
             </Link>
 
+            {/* Get Support Button */}
+            <button
+              onClick={() => onOpenSupport && onOpenSupport()}
+              className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 font-medium transition-colors"
+            >
+              Get Support
+            </button>
+
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700 font-medium">{user?.name}</span>
+              <div className="relative" ref={profileRef}>
                 <button
-                  onClick={handleLogout}
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 font-medium transition-colors"
+                  onClick={() => setProfileOpen((s) => !s)}
+                  className="flex items-center space-x-2 bg-white hover:bg-gray-50 px-3 py-2 rounded-md border border-gray-200"
                 >
-                  Logout
+                  <span className="text-gray-700 font-medium">{user?.name}</span>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
+
+                {profileOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg py-2 border border-gray-200 z-40">
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => { setProfileOpen(false); navigate('/lms'); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      LMS
+                    </button>
+                    <button
+                      onClick={async () => { setProfileOpen(false); await handleLogout(); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
-              <Link 
-                to="/login" 
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium transition-colors"
-              >
-                Login
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Sign up
+                </Link>
+                <Link 
+                  to="/login" 
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium transition-colors"
+                >
+                  Login
+                </Link>
+              </div>
             )}
           </div>
 
@@ -208,6 +264,15 @@ const Navbar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </Link>
+            <button
+              onClick={() => {
+                toggleMobileMenu();
+                onOpenSupport && onOpenSupport();
+              }}
+              className="text-gray-700 focus:outline-none px-2 py-1"
+            >
+              Get Support
+            </button>
             <button
               onClick={toggleMobileMenu}
               className="text-gray-700 focus:outline-none"
@@ -232,6 +297,13 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
+            </Link>
+            <Link 
+              to="/admin" 
+              className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-md"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Admin Panel
             </Link>
             
             <div>
@@ -330,8 +402,21 @@ const Navbar = () => {
             </div>
 
             {isAuthenticated ? (
-              <div className="px-4 py-2">
-                <p className="text-gray-700 mb-2">{user?.name}</p>
+              <div className="px-4 py-2 space-y-2">
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-md"
+                >
+                  Profile
+                </Link>
+                <Link
+                  to="/lms"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-md"
+                >
+                  LMS
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();

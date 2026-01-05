@@ -6,12 +6,14 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { fetchCourseBySlug } from '../services/courseService';
-import { getCourseBySlug } from '../data/courses'; // Fallback static data
+import { postEnroll } from '../services/lmsApi';
+import { useAuth } from '../context/AuthContext';
 
 const CourseDetails = () => {
   const { slug } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadCourse();
@@ -21,17 +23,9 @@ const CourseDetails = () => {
     try {
       // Try to fetch from API
       const apiCourse = await fetchCourseBySlug(slug);
-      if (apiCourse) {
-        setCourse(apiCourse);
-      } else {
-        // Fallback to static data
-        const staticCourse = getCourseBySlug(slug);
-        setCourse(staticCourse);
-      }
+      setCourse(apiCourse);
     } catch (error) {
-      // Fallback to static data on error
-      const staticCourse = getCourseBySlug(slug);
-      setCourse(staticCourse);
+      setError(error.message || 'Failed to load course');
     } finally {
       setLoading(false);
     }
@@ -52,6 +46,18 @@ const CourseDetails = () => {
     }
   };
 
+  const { isAuthenticated } = useAuth();
+
+  const handleEnroll = async () => {
+    if (!course || !course._id) return;
+    try {
+      await postEnroll(course._id);
+      alert('Enrolled successfully');
+    } catch (err) {
+      alert(err.message || 'Enroll failed');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
@@ -67,7 +73,7 @@ const CourseDetails = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Course Not Found</h1>
-          <p className="text-gray-600 mb-8">The course you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-8">{error || "The course you're looking for doesn't exist."}</p>
           <Link
             to="/programs"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
@@ -137,18 +143,29 @@ const CourseDetails = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Add to Cart
-              </button>
-              <Link
-                to="/login"
-                className="flex-1 bg-gray-200 text-gray-800 px-8 py-4 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-center"
-              >
-                Login to Enroll
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={handleEnroll}
+                    className="flex-1 bg-green-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  >
+                    Enroll
+                  </button>
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Add to Cart
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="flex-1 bg-gray-200 text-gray-800 px-8 py-4 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-center"
+                >
+                  Login to Enroll
+                </Link>
+              )}
             </div>
           </div>
         </div>

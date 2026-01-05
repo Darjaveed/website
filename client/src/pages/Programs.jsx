@@ -5,13 +5,16 @@
 
 import { useState, useEffect } from 'react';
 import CourseCard from '../components/CourseCard';
+import { postEnroll } from '../services/lmsApi';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { fetchCourses } from '../services/courseService';
-import { getCoursesByCategory } from '../data/courses'; // Fallback static data
 
 const Programs = () => {
   const [programCourses, setProgramCourses] = useState([]);
   const [shortTermCourses, setShortTermCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadCourses();
@@ -19,24 +22,27 @@ const Programs = () => {
 
   const loadCourses = async () => {
     try {
-      // Try to fetch from API
       const allCourses = await fetchCourses();
-      
-      if (allCourses && allCourses.length > 0) {
-        // Use API data
-        setProgramCourses(allCourses.filter(c => c.category === 'program'));
-        setShortTermCourses(allCourses.filter(c => c.category === 'short-term'));
-      } else {
-        // Fallback to static data
-        setProgramCourses(getCoursesByCategory('program'));
-        setShortTermCourses(getCoursesByCategory('short-term'));
-      }
-    } catch (error) {
-      // Fallback to static data on error
-      setProgramCourses(getCoursesByCategory('program'));
-      setShortTermCourses(getCoursesByCategory('short-term'));
+      setProgramCourses(allCourses.filter((c) => c.category === 'program'));
+      setShortTermCourses(allCourses.filter((c) => c.category === 'short-term'));
+    } catch (err) {
+      setError(err.message || 'Failed to load courses');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleEnroll = async (courseId) => {
+    if (!isAuthenticated) return navigate('/login');
+    try {
+      await postEnroll(courseId);
+      alert('Enrolled successfully');
+      navigate('/lms');
+    } catch (err) {
+      alert(err.message || 'Enroll failed');
     }
   };
 
@@ -55,10 +61,19 @@ const Programs = () => {
           </div>
           {loading ? (
             <div className="text-center py-12">Loading courses...</div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-600">{error}</div>
+          ) : programCourses.length === 0 ? (
+            <div className="text-center py-12">No programs available.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {programCourses.map((course) => (
-                <CourseCard key={course._id || course.id} course={course} />
+                <div key={course._id || course.id} className="relative">
+                  <CourseCard course={course} />
+                  <div className="p-4">
+                    <button onClick={() => handleEnroll(course._id)} className="w-full bg-green-600 text-white px-4 py-2 rounded-md mt-2">Enroll</button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -76,6 +91,10 @@ const Programs = () => {
           </div>
           {loading ? (
             <div className="text-center py-12">Loading courses...</div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-600">{error}</div>
+          ) : shortTermCourses.length === 0 ? (
+            <div className="text-center py-12">No short-term courses available.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {shortTermCourses.map((course) => (
