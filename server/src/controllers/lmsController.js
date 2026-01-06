@@ -1,6 +1,8 @@
 import Enrollment from '../models/Enrollment.js';
 import Module from '../models/Module.js';
 import Lesson from '../models/Lesson.js';
+import Assignment from '../models/Assignment.js';
+import Notes from '../models/Notes.js';
 import Progress from '../models/Progress.js';
 import Course from '../models/Course.js';
 
@@ -24,33 +26,6 @@ export const enrollInCourse = async (req, res) => {
     }
 
     const enrollment = await Enrollment.create({ userId: req.user._id, courseId, status: 'active' });
-
-    // If this is the first time content is created for this course, create fake modules/lessons
-    const existingModules = await Module.find({ courseId }).limit(1).lean();
-    if (!existingModules || existingModules.length === 0) {
-      const moduleTitles = ['Introduction', 'Core Concepts', 'Advanced Topics'];
-      for (let mi = 0; mi < moduleTitles.length; mi++) {
-        const mod = await Module.create({ title: moduleTitles[mi], courseId, order: mi + 1 });
-        // two video lessons
-        for (let v = 1; v <= 2; v++) {
-          await Lesson.create({
-            title: `${moduleTitles[mi]} - Video Lesson ${v}`,
-            moduleId: mod._id,
-            type: 'video',
-            videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            order: v,
-          });
-        }
-        // one assignment lesson
-        await Lesson.create({
-          title: `${moduleTitles[mi]} - Assignment`,
-          moduleId: mod._id,
-          type: 'assignment',
-          assignmentDescription: 'Please complete the short assignment for this module.',
-          order: 3,
-        });
-      }
-    }
 
     res.status(201).json({ success: true, data: enrollment });
   } catch (err) {
@@ -110,6 +85,46 @@ export const getModuleLessons = async (req, res) => {
   }
 };
 
+// GET /api/lms/module/:moduleId/assignments
+export const getModuleAssignments = async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+    const module = await Module.findById(moduleId).lean();
+    if (!module) return res.status(404).json({ success: false, message: 'Module not found' });
+
+    const enrolled = await Enrollment.findOne({ userId: req.user._id, courseId: module.courseId, status: 'active' });
+    if (!enrolled && req.user.role !== 'super_admin') {
+      return res.status(403).json({ success: false, message: 'Not enrolled in this course' });
+    }
+
+    const assignments = await Assignment.find({ moduleId }).sort({ order: 1 }).lean();
+    res.status(200).json({ success: true, data: assignments });
+  } catch (err) {
+    console.error('getModuleAssignments error', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// GET /api/lms/module/:moduleId/notes
+export const getModuleNotes = async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+    const module = await Module.findById(moduleId).lean();
+    if (!module) return res.status(404).json({ success: false, message: 'Module not found' });
+
+    const enrolled = await Enrollment.findOne({ userId: req.user._id, courseId: module.courseId, status: 'active' });
+    if (!enrolled && req.user.role !== 'super_admin') {
+      return res.status(403).json({ success: false, message: 'Not enrolled in this course' });
+    }
+
+    const notes = await Notes.find({ moduleId }).sort({ order: 1 }).lean();
+    res.status(200).json({ success: true, data: notes });
+  } catch (err) {
+    console.error('getModuleNotes error', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // POST /api/lms/progress
 export const postProgress = async (req, res) => {
   try {
@@ -158,3 +173,5 @@ export const getCourseProgress = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+

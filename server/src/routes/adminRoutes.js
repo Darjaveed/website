@@ -17,4 +17,12 @@ router.get('/modules/:courseId', adminController.getModulesByCourse);
 router.post('/lessons', adminController.createLesson);
 router.get('/lessons/:moduleId', adminController.getLessonsByModule);
 
+// Assignments
+router.post('/assignments', adminController.createAssignment);
+router.get('/assignments/:moduleId', adminController.getAssignmentsByModule);
+
+// Notes
+router.post('/notes', adminController.createNotes);
+router.get('/notes/:moduleId', adminController.getNotesByModule);
+
 export default router;

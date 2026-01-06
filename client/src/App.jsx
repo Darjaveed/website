@@ -35,6 +35,8 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminCourses from './pages/admin/Courses';
 import AdminModules from './pages/admin/Modules';
 import AdminLessons from './pages/admin/Lessons';
+import AdminAssignments from './pages/admin/Assignments';
+import AdminNotes from './pages/admin/Notes';
 
 function App() {
   const [showSupport, setShowSupport] = useState(false);
@@ -73,7 +75,9 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="courses" element={<AdminCourses />} />
                 <Route path="modules/:courseId" element={<AdminModules />} />
-                <Route path="lessons/:moduleId" element={<AdminLessons />} />
+                <Route path="lessons/:courseId" element={<AdminLessons />} />
+                <Route path="assignments/:courseId" element={<AdminAssignments />} />
+                <Route path="notes/:courseId" element={<AdminNotes />} />
               </Route>
               <Route path="/verify-assignment" element={<VerifyAssignment />} />
               <Route path="/verify-certificate" element={<VerifyCertificate />} />

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import LessonForm from '../../components/admin/LessonForm';
+import AssignmentForm from '../../components/admin/AssignmentForm';
 import adminApi from '../../services/adminApi';
 
-export default function Lessons() {
+export default function Assignments() {
   const { courseId } = useParams();
   const [showForm, setShowForm] = useState(false);
-  const [lessons, setLessons] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [modules, setModules] = useState([]);
   const [selectedModuleId, setSelectedModuleId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,16 +22,16 @@ export default function Lessons() {
     }
   };
 
-  const loadLessons = async (moduleId) => {
+  const loadAssignments = async (moduleId) => {
     if (!moduleId) {
-      setLessons([]);
+      setAssignments([]);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const data = await adminApi.getLessons(moduleId);
-      setLessons(data || []);
+      const data = await adminApi.getAssignments(moduleId);
+      setAssignments(data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,16 +44,16 @@ export default function Lessons() {
   }, [courseId]);
 
   useEffect(() => {
-    if (selectedModuleId) loadLessons(selectedModuleId);
+    if (selectedModuleId) loadAssignments(selectedModuleId);
   }, [selectedModuleId]);
 
   const handleCreate = async (payload) => {
     setError(null);
     try {
-      await adminApi.createLesson({ ...payload, moduleId: selectedModuleId });
+      await adminApi.createAssignment({ ...payload, moduleId: selectedModuleId });
       setShowForm(false);
-      setMessage('Lesson created');
-      loadLessons(selectedModuleId);
+      setMessage('Assignment created');
+      loadAssignments(selectedModuleId);
     } catch (err) {
       setError(err.message);
     }
@@ -62,7 +62,7 @@ export default function Lessons() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Lessons for Course {courseId}</h2>
+        <h2 className="text-2xl font-bold">Assignments for Course {courseId}</h2>
       </div>
 
       <div className="mb-4">
@@ -77,7 +77,7 @@ export default function Lessons() {
 
       {selectedModuleId && (
         <div className="mb-4">
-          <button onClick={() => setShowForm(true)} className="bg-green-600 text-white px-3 py-1 rounded">New Lesson</button>
+          <button onClick={() => setShowForm(true)} className="bg-green-600 text-white px-3 py-1 rounded">New Assignment</button>
         </div>
       )}
 
@@ -86,25 +86,25 @@ export default function Lessons() {
 
       {showForm && selectedModuleId && (
         <div className="mb-4 border p-4 rounded bg-gray-50">
-          <LessonForm initial={{ moduleId: selectedModuleId }} onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+          <AssignmentForm initial={{ moduleId: selectedModuleId }} onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
       {loading ? (
-        <div>Loading lessons...</div>
+        <div>Loading assignments...</div>
       ) : selectedModuleId ? (
         <div className="space-y-3">
-          {lessons.map((l) => (
-            <div key={l._id} className="border p-3 rounded">
-              <div className="font-semibold">{l.title} <span className="text-xs text-gray-500">({l.type})</span></div>
-              {l.type === 'video' && <div className="text-sm text-gray-600">Video: {l.videoUrl}</div>}
-              {l.type === 'assignment' && <div className="text-sm text-gray-600">Assignment: {l.assignmentDescription}</div>}
-              <div className="text-xs text-gray-500 mt-1">ID: {l._id}</div>
+          {assignments.map((a) => (
+            <div key={a._id} className="border p-3 rounded">
+              <div className="font-semibold">{a.title}</div>
+              <div className="text-sm text-gray-600">{a.description}</div>
+              {a.dueDate && <div className="text-sm text-gray-500">Due: {new Date(a.dueDate).toLocaleDateString()}</div>}
+              <div className="text-xs text-gray-500 mt-1">ID: {a._id}</div>
             </div>
           ))}
         </div>
       ) : (
-        <div>Select a module to view lessons</div>
+        <div>Select a module to view assignments</div>
       )}
     </div>
   );

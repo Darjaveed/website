@@ -2,10 +2,11 @@
  * API helper using fetch with base URL from env
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5003';
 
 export const apiGet = async (path, opts = {}) => {
-  const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const url = `${BASE_URL}/api${path.startsWith('/') ? path : `/${path}`}`;
+  console.log('[API] GET:', url);
 
   const res = await fetch(url, {
     method: 'GET',
@@ -16,6 +17,7 @@ export const apiGet = async (path, opts = {}) => {
     },
   });
 
+  console.log('[API] GET response status:', res.status);
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
@@ -27,7 +29,8 @@ export const apiGet = async (path, opts = {}) => {
 };
 
 export const apiPut = async (path, body = {}, opts = {}) => {
-  const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const url = `${BASE_URL}/api${path.startsWith('/') ? path : `/${path}`}`;
+  console.log('[API] PUT:', url);
 
   const res = await fetch(url, {
     method: 'PUT',
@@ -39,6 +42,7 @@ export const apiPut = async (path, body = {}, opts = {}) => {
     body: JSON.stringify(body),
   });
 
+  console.log('[API] PUT response status:', res.status);
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
@@ -50,7 +54,8 @@ export const apiPut = async (path, body = {}, opts = {}) => {
 };
 
 export const apiPost = async (path, body = {}, opts = {}) => {
-  const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const url = `${BASE_URL}/api${path.startsWith('/') ? path : `/${path}`}`;
+  console.log('[API] POST:', url);
 
   const res = await fetch(url, {
     method: 'POST',
@@ -62,6 +67,7 @@ export const apiPost = async (path, body = {}, opts = {}) => {
     body: JSON.stringify(body),
   });
 
+  console.log('[API] POST response status:', res.status);
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
@@ -73,7 +79,8 @@ export const apiPost = async (path, body = {}, opts = {}) => {
 };
 
 export const apiDelete = async (path, opts = {}) => {
-  const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  const url = `${BASE_URL}/api${path.startsWith('/') ? path : `/${path}`}`;
+  console.log('[API] DELETE:', url);
 
   const res = await fetch(url, {
     method: 'DELETE',
@@ -84,6 +91,7 @@ export const apiDelete = async (path, opts = {}) => {
     },
   });
 
+  console.log('[API] DELETE response status:', res.status);
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {

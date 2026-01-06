@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from './api';
+import { apiGet, apiPut, apiPost } from './api';
 
 export const getMyCourses = async () => {
   const data = await apiGet('/lms/my-courses');
@@ -15,28 +15,23 @@ export const getModuleLessons = async (moduleId) => {
   return data?.data || [];
 };
 
+export const getModuleAssignments = async (moduleId) => {
+  const data = await apiGet(`/lms/module/${moduleId}/assignments`);
+  return data?.data || [];
+};
+
+export const getModuleNotes = async (moduleId) => {
+  const data = await apiGet(`/lms/module/${moduleId}/notes`);
+  return data?.data || [];
+};
+
 export const postProgress = async (payload) => {
-  const data = await fetch(`${import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/lms/progress`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }).then(r => r.json());
-  if (!data || !data.success) throw new Error(data?.message || 'Failed');
+  return await apiPost('/lms/progress', payload);
   return data.data;
 };
 
 export const postEnroll = async (courseId) => {
-  const url = `${import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/lms/enroll`;
-  const res = await fetch(url, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ courseId }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || 'Enroll failed');
-  return data.data;
+  return await apiPost('/lms/enroll', { courseId });
 };
 
 export const getCourseProgress = async (courseId) => {
@@ -44,4 +39,4 @@ export const getCourseProgress = async (courseId) => {
   return data?.data || null;
 };
 
-export default { getMyCourses, getCourseModules, getModuleLessons, postProgress, getCourseProgress };
+export default { getMyCourses, getCourseModules, getModuleLessons, getModuleAssignments, getModuleNotes, postProgress, getCourseProgress };

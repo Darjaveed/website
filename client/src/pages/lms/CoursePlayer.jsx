@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getCourseModules, getModuleLessons, postProgress, getCourseProgress } from '../../services/lmsApi';
+import { getCourseModules, getModuleLessons, getModuleAssignments, getModuleNotes, postProgress, getCourseProgress } from '../../services/lmsApi';
 
 const CoursePlayer = () => {
   const { slug } = useParams();
@@ -9,6 +9,8 @@ const CoursePlayer = () => {
   const [modules, setModules] = useState([]);
   const [activeModule, setActiveModule] = useState(null);
   const [lessons, setLessons] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [activeLesson, setActiveLesson] = useState(null);
   const [progress, setProgress] = useState([]);
 
@@ -27,10 +29,18 @@ const CoursePlayer = () => {
   const openModule = async (m) => {
     setActiveModule(m._id);
     try {
-      const ls = await getModuleLessons(m._id);
+      const [ls, as, ns] = await Promise.all([
+        getModuleLessons(m._id),
+        getModuleAssignments(m._id),
+        getModuleNotes(m._id)
+      ]);
       setLessons(ls);
+      setAssignments(as);
+      setNotes(ns);
     } catch (err) {
       setLessons([]);
+      setAssignments([]);
+      setNotes([]);
     }
   };
 
@@ -86,6 +96,25 @@ const CoursePlayer = () => {
               {lessons.map(l => (
                 <li key={l._id} className={`p-2 border mb-2 ${activeLesson?._id === l._id ? 'bg-blue-50' : ''}`}>
                   <button onClick={() => playLesson(l)} className="w-full text-left">{l.title}</button>
+                </li>
+              ))}
+            </ul>
+            <h4 className="font-semibold mb-2 mt-4">Assignments</h4>
+            <ul>
+              {assignments.map(a => (
+                <li key={a._id} className="p-2 border mb-2">
+                  <div className="font-medium">{a.title}</div>
+                  <div className="text-sm text-gray-600">{a.description}</div>
+                  {a.dueDate && <div className="text-xs text-gray-500">Due: {new Date(a.dueDate).toLocaleDateString()}</div>}
+                </li>
+              ))}
+            </ul>
+            <h4 className="font-semibold mb-2 mt-4">Notes</h4>
+            <ul>
+              {notes.map(n => (
+                <li key={n._id} className="p-2 border mb-2">
+                  <div className="font-medium">{n.title}</div>
+                  <div className="text-sm text-gray-600">{n.content}</div>
                 </li>
               ))}
             </ul>

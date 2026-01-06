@@ -3,7 +3,7 @@
  * Handles media uploads to Cloudinary (placeholder for future implementation)
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5003';
 
 /**
  * Upload image to Cloudinary
@@ -15,7 +15,7 @@ export const uploadImage = async (file) => {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(`${API_URL}/upload/image`, {
+    const response = await fetch(`${API_URL}/api/upload/image`, {
       method: 'POST',
       credentials: 'include',
       body: formData,
@@ -44,7 +44,7 @@ export const uploadVideo = async (file) => {
     const formData = new FormData();
     formData.append('video', file);
 
-    const response = await fetch(`${API_URL}/upload/video`, {
+    const response = await fetch(`${API_URL}/api/upload/video`, {
       method: 'POST',
       credentials: 'include',
       body: formData,

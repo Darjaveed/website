@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import LessonForm from '../../components/admin/LessonForm';
+import NotesForm from '../../components/admin/NotesForm';
 import adminApi from '../../services/adminApi';
 
-export default function Lessons() {
+export default function Notes() {
   const { courseId } = useParams();
   const [showForm, setShowForm] = useState(false);
-  const [lessons, setLessons] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [modules, setModules] = useState([]);
   const [selectedModuleId, setSelectedModuleId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,16 +22,16 @@ export default function Lessons() {
     }
   };
 
-  const loadLessons = async (moduleId) => {
+  const loadNotes = async (moduleId) => {
     if (!moduleId) {
-      setLessons([]);
+      setNotes([]);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const data = await adminApi.getLessons(moduleId);
-      setLessons(data || []);
+      const data = await adminApi.getNotes(moduleId);
+      setNotes(data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,16 +44,16 @@ export default function Lessons() {
   }, [courseId]);
 
   useEffect(() => {
-    if (selectedModuleId) loadLessons(selectedModuleId);
+    if (selectedModuleId) loadNotes(selectedModuleId);
   }, [selectedModuleId]);
 
   const handleCreate = async (payload) => {
     setError(null);
     try {
-      await adminApi.createLesson({ ...payload, moduleId: selectedModuleId });
+      await adminApi.createNotes({ ...payload, moduleId: selectedModuleId });
       setShowForm(false);
-      setMessage('Lesson created');
-      loadLessons(selectedModuleId);
+      setMessage('Notes created');
+      loadNotes(selectedModuleId);
     } catch (err) {
       setError(err.message);
     }
@@ -62,7 +62,7 @@ export default function Lessons() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Lessons for Course {courseId}</h2>
+        <h2 className="text-2xl font-bold">Notes for Course {courseId}</h2>
       </div>
 
       <div className="mb-4">
@@ -77,7 +77,7 @@ export default function Lessons() {
 
       {selectedModuleId && (
         <div className="mb-4">
-          <button onClick={() => setShowForm(true)} className="bg-green-600 text-white px-3 py-1 rounded">New Lesson</button>
+          <button onClick={() => setShowForm(true)} className="bg-green-600 text-white px-3 py-1 rounded">New Notes</button>
         </div>
       )}
 
@@ -86,25 +86,24 @@ export default function Lessons() {
 
       {showForm && selectedModuleId && (
         <div className="mb-4 border p-4 rounded bg-gray-50">
-          <LessonForm initial={{ moduleId: selectedModuleId }} onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+          <NotesForm initial={{ moduleId: selectedModuleId }} onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
       {loading ? (
-        <div>Loading lessons...</div>
+        <div>Loading notes...</div>
       ) : selectedModuleId ? (
         <div className="space-y-3">
-          {lessons.map((l) => (
-            <div key={l._id} className="border p-3 rounded">
-              <div className="font-semibold">{l.title} <span className="text-xs text-gray-500">({l.type})</span></div>
-              {l.type === 'video' && <div className="text-sm text-gray-600">Video: {l.videoUrl}</div>}
-              {l.type === 'assignment' && <div className="text-sm text-gray-600">Assignment: {l.assignmentDescription}</div>}
-              <div className="text-xs text-gray-500 mt-1">ID: {l._id}</div>
+          {notes.map((n) => (
+            <div key={n._id} className="border p-3 rounded">
+              <div className="font-semibold">{n.title}</div>
+              <div className="text-sm text-gray-600">{n.content}</div>
+              <div className="text-xs text-gray-500 mt-1">ID: {n._id}</div>
             </div>
           ))}
         </div>
       ) : (
-        <div>Select a module to view lessons</div>
+        <div>Select a module to view notes</div>
       )}
     </div>
   );

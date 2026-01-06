@@ -56,7 +56,7 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('Global Error Handler:', err);
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Server error',

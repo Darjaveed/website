@@ -67,7 +67,9 @@ export default function Modules() {
                 <div className="text-xs text-gray-500">ID: {m._id}</div>
               </div>
               <div>
-                <a href={`/admin/lessons/${m._id}`} className="px-3 py-1 bg-blue-600 text-white rounded">Manage Lessons</a>
+                <a href={`/admin/lessons/${courseId}`} className="px-3 py-1 bg-blue-600 text-white rounded">Manage Lessons</a>
+                <a href={`/admin/assignments/${courseId}`} className="ml-2 px-3 py-1 bg-purple-600 text-white rounded">Manage Assignments</a>
+                <a href={`/admin/notes/${courseId}`} className="ml-2 px-3 py-1 bg-green-600 text-white rounded">Manage Notes</a>
               </div>
             </div>
           ))}
